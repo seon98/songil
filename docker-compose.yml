@@ -1,0 +1,43 @@
+# songil-django/docker-compose.yml
+version: '3.8'
+
+services:
+  # 1. PostGIS 데이터베이스 서비스 (이전과 동일)
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: songil_db_django
+    volumes:
+      - songil_postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: sanggil
+      POSTGRES_PASSWORD: sanggil_pw
+      POSTGRES_DB: sanggil_db
+    ports:
+      - "5433:5432" # 로컬에서 5433으로 DB 접근 가능
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sanggil -d sanggil_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # 2. Django 백엔드 서비스
+  backend:
+    container_name: songil_app_django
+    build:
+      context: ./backend # ./backend 디렉터리를 빌드
+    volumes:
+      - ./backend:/app # 로컬 ./backend 폴더를 컨테이너 /app과 동기화
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env # 환경변수 파일 주입
+    # Why: Django 개발 서버 실행 (코드 변경 시 자동 리로드)
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db: # 'db' 서비스가 healthy 상태가 된 후 'backend' 시작
+        condition: service_healthy
+    restart: always
+
+volumes:
+  songil_postgres_data:

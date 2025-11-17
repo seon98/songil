@@ -1,0 +1,6 @@
+# songil-django/backend/requirements.txt
+django
+djangorestframework
+psycopg2-binary     # PostgreSQL 드라이버
+django-environ      # .env 파일 관리를 위함
+djangorestframework-gis # DRF에서 GeoJSON을 다루기 위함
